@@ -1,5 +1,6 @@
 import pygame
 import csv
+from data.paths import *
 
 map_width = 30		# Amount of tiles in the x-axis.
 map_height = 13		# Amount of tiles in the y-axis.
@@ -7,8 +8,9 @@ tile_width = 16		# Width of the tile.
 tile_height = 16	# Height of the tile.
 map_squares = []	# List of MapSquare objects.
 
-dirt_img = pygame.image.load('dirt.png')
-grass_img = pygame.image.load('grass.png')
+dirt_img = pygame.image.load(DIRT_TILE)
+grass_img = pygame.image.load(GRASS_TILE)
+
 
 tile_indexes = {1: dirt_img, 2: grass_img}
 
@@ -42,7 +44,9 @@ def draw(display, scroll):
 
 
 def initialize():
-	""" TODO: Evaluate if its existence is justified."""
+	""" Prepares an empty map.
+	TODO: Evaluate if its existence is justified.
+	"""
 	for x in range(map_width):
 		map_row = []
 		for y in range(map_height):
@@ -56,27 +60,7 @@ def load_map(path):
 	:param path: the relative path of the map.
 	TODO: probably should include a level.
 	"""
-	from pathlib import Path
-
-	path = Path(__file__).parent / f"{path}.csv"
-
 	with open(f'{path}', newline='') as csvfile:
-		reader = csv.reader(csvfile, delimiter=',')
-		for i in range(map_width):
-			lista = []
-			for row in reader:
-				elem = row[i].split(';')
-				lista.append(MapSquare(elem[0], elem[1], elem[2]))
-			map_squares.append(lista)
-			csvfile.seek(0)
-
-def load_map_copy(path):
-	"""Load a map from a .csv file
-
-	:param path: the relative path of the map.
-	TODO: probably should include a level.
-	"""
-	with open(f'{path}.csv', newline='') as csvfile:
 		reader = csv.reader(csvfile, delimiter=',')
 		for i in range(map_width):
 			lista = []
@@ -93,9 +77,7 @@ def save_map(path):
 	:param path: the relative save path of the map.
 	TODO: probably should include a level.
 	"""
-	from pathlib import Path
 
-	path = Path(__file__).parent / f"{path}.csv"
 	with open(f'{path}', 'w', newline='') as csvfile:
 		writer = csv.writer(csvfile, delimiter=',')
 		for i in range(map_height):

@@ -1,4 +1,9 @@
-import pygame, sys, tile_engine
+from data.paths import *
+
+import tile_engine
+import pygame
+import sys 
+
 
 clock = pygame.time.Clock()  # set up the clock
 
@@ -25,11 +30,8 @@ sscroll = [0, 0]
 player_rect = pygame.Rect(100, 90, 20, 20)
 
 
-tile_engine.load_map('level_data')
-tile_engine.save_map('saved')
-
-print(help(tile_engine.MapSquare))
-
+tile_engine.load_map(LEVEL_1)
+tile_engine.save_map(LEVEL_1_SAVED)
 
 
 def move(rect, movement, tiles):
@@ -117,3 +119,4 @@ while True:
 	screen.blit(surf, (0, 0))
 	pygame.display.update()  # update display
 	clock.tick(60)  # maintain 60 fps
+
