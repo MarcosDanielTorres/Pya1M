@@ -6,7 +6,7 @@ from PIL import ImageFont
 
 sys.path.append('..')
 
-from gui.gui import ToolBar
+from gui.gui import ToolBar, Group
 import tile_engine
 from data.paths import *
 # To run as a standalone program.
@@ -57,6 +57,7 @@ tile_engine.save_map("xd.csv")
 print(tile_engine.map_squares)
 """
 tile_engine.load_map("xd.csv")
+tile_engine.save_map("xd-saved.csv")
 
 def process_events():
 	global level, scrolling_left, scrolling_right
@@ -105,47 +106,48 @@ def draw_text(screen, text, font, text_col, x,y, center=True):
 	screen.blit(img, (x,y))
 	return img.get_rect()
 
-def draw_group_label():
-	x = 15
-	y = TILE_MAP_POS_Y + 420
-	width = 225 
-	height = 100
-	rect = pygame.Rect(x,y,width,height)
-	#pygame.draw.rect(screen, BORDER_COLOR, (x, y, width, height), 1)
-	#draw_text(screen, "Group Label", font, RED, x+15,y-9)
-	draw_group_label_container(screen, "Group Label", rect)
-
-	pygame.draw.circle(screen, WHITE, (x+25, y+20), 7)
-	pygame.draw.circle(screen, BORDER_COLOR, (x+25, y+20), 8, 1)
-
-	pygame.draw.circle(screen, WHITE, (x+25, y+45), 7)
-	pygame.draw.circle(screen, BORDER_COLOR, (x+25, y+45), 8, 1)
-
-
-def draw_group_label_container(screen, text, rect):
-	text_rect = draw_text(screen, text, MAIN_FONT, BLACK, rect.x + 20, rect.y - 9)
-	f = ImageFont.truetype(MAIN_LEVEL_EDITOR_FONT, 14)
-	size = f.getsize(text)
-	pygame.draw.line(screen, BORDER_COLOR, (rect.x, rect.y), (rect.x + 15, rect.y))
-	pygame.draw.line(screen, BORDER_COLOR, (rect.x + 20 + size[0] + 5, rect.y), (rect.x + rect.width, rect.y))
-
-	pygame.draw.line(screen, BORDER_COLOR, (rect.x + rect.width, rect.y), (rect.x + rect.width, rect.y + rect.height))
-	pygame.draw.line(screen, BORDER_COLOR, (rect.x + rect.width, rect.y + rect.height), (rect.x, rect.y + rect.height))
-	pygame.draw.line(screen, BORDER_COLOR, (rect.x, rect.y + rect.height), (rect.x, rect.y))
-
-
-
 
 pygame.display.set_caption('Level Editor')
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 tile_map = pygame.Surface((TILE_MAP_WIDTH, TILE_MAP_HEIGHT)) #MAP HEIGHT SHOULD BE TILES PER SCREEN VERTICALLY
 
 TILE_MAP_POS_X = 430
-TILE_MAP_POS_Y = 50 
+TILE_MAP_POS_Y = 50
 
+def about_test():
+	print("My name is Marcos Daniel and I'm a developer from Argentina doing this project just for fun!")
+
+def clear_test():
+	tile_engine.initialize()
 
 
 tb = ToolBar(screen)
+
+tb_new = ToolBar.get_button('New')
+tb_new.set_action(lambda: print("New"))
+tb_save = ToolBar.get_button('Save')
+tb_save.set_action(lambda: print("Save"))
+tb_load = ToolBar.get_button('Load')
+tb_load.set_action(lambda: print("Load"))
+
+tb_interactive = ToolBar.get_button('Interactive')
+tb_interactive.set_action(lambda: print("Interactive "))
+tb_foreground = ToolBar.get_button('Foreground')
+tb_foreground.set_action(lambda: print("Foreground"))
+tb_background = ToolBar.get_button('Background')
+tb_background.set_action(lambda: print("Background"))
+
+tb_clear = ToolBar.get_button('Clear')
+tb_clear.set_action(clear_test)
+
+tb_about = ToolBar.get_button('About')
+tb_about.set_action(about_test)
+
+
+group = Group("Tile Properties", 15, TILE_MAP_POS_Y + 420, 225, 100)
+group.add_radiobutton("Toggle Passable", 20, 20, 8)
+group.add_radiobutton("Code", 20, 45, 8)
+
 
 scroll = [0,0]
 scrolling_right = False
@@ -160,7 +162,8 @@ while True:
 	draw_grid()
 
 	draw_listview_container() # obj listview
-	draw_group_label() # obj group label
+
+	group.draw_group_label(screen)
 
 
 	if scrolling_right:
