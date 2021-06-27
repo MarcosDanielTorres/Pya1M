@@ -44,9 +44,9 @@ def draw(display, scroll):
 
 
 def initialize():
-	""" Prepares an empty map.
-	TODO: Evaluate if its existence is justified.
-	"""
+	""" Prepares an empty map."""
+	clear_map()
+
 	for x in range(map_width):
 		map_row = []
 		for y in range(map_height):
@@ -55,6 +55,7 @@ def initialize():
 
 
 def load_map(path):
+	clear_map()
 	"""Load a map from a .csv file
 
 	:param path: the relative path of the map.

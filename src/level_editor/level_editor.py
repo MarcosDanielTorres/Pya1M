@@ -9,6 +9,7 @@ sys.path.append('..')
 from gui.gui import ToolBar, Group
 import tile_engine
 from data.paths import *
+
 # To run as a standalone program.
 
 pygame.init()

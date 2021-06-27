@@ -1,6 +1,12 @@
 import pygame, sys
+import abc
 sys.path.append('..')
 from data.paths import *
+from PIL import ImageFont
+
+
+BORDER_COLOR = (130, 135, 144)
+WHITE = (255, 255, 255)
 """
 	TODO: Document
 	Added text to buttons. I will not treat the header_btn of the dropdown
@@ -29,10 +35,17 @@ def draw_text(screen, text, font, text_col, rect, center=True):
     else:
         screen.blit(text, rect)
 
+
+def draw_text2(screen, text, font, text_col, x,y, center=True):
+    img = font.render(text, True, text_col)
+    screen.blit(img, (x,y))
+    return img.get_rect()
+
+
 class ToolBar:
     menubar_clicked = False
     menu_bar_buttons = list()
-    tool_names = {"File": 0, "Layers": 1, "About": 2}
+    tool_names = {"File": 0, "Edit": 1, "Layers": 2, "Help": 3}
     tool_index = -1
 
     def __init__(self, screen):
@@ -46,16 +59,19 @@ class ToolBar:
         self.file_tool.add_button("New", 20) #here should add the function
         self.file_tool.add_button("Save", 40)
         self.file_tool.add_button("Load", 60)
+        self.edit_tool = ToolBarDropDown("Edit", 40, 0, 60, 20)
+        self.edit_tool.add_button("Clear", 20)
 
-        self.layer_tool = ToolBarDropDown("Layers", 40, 0, 60, 20)
+        self.layer_tool = ToolBarDropDown("Layers", 100, 0, 55, 20)
         self.layer_tool.add_button("Interactive", 20)
         self.layer_tool.add_button("Foreground", 40)
         self.layer_tool.add_button("Background", 60)
 
-        self.about_tool = ToolBarDropDown("About", 100, 0, 55, 20)
-        self.about_tool.add_button("Contact", 20)
 
-        ToolBar.menu_bar_buttons = (self.file_tool, self.layer_tool, self.about_tool)
+        self.about_tool = ToolBarDropDown("Help", 155, 0, 55, 20)
+        self.about_tool.add_button("About", 20)
+
+        ToolBar.menu_bar_buttons = (self.file_tool,self.edit_tool, self.layer_tool,  self.about_tool)
 
 
     def draw(self):
@@ -86,6 +102,13 @@ class ToolBar:
             if i != index:
                 tool.clicked = False
                 tool.hovered = False
+
+    @staticmethod
+    def get_button(text):
+        for tool in ToolBar.menu_bar_buttons:
+            for btn in tool.btn_list:
+                if btn.text == text:
+                    return btn
 
 
 
@@ -152,16 +175,32 @@ class ToolBarDropDown:
 
 
     def add_button(self, name, y):
-        self.btn_list.append(Button(name, self.x, y, self))
+        self.btn_list.append(ToolBarButton(name, self.x, y, self))
 
 
-class Button:
-    def __init__(self, text, x, y, tool, col=(250, 250, 250), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
+
+
+class Button(metaclass=abc.ABCMeta):
+    def __init__(self, text, x, y, col=(250,250,250), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
         self.text = text
         self.col = col
         self.hovered_col = hovered_col
         self.rect = pygame.Rect(x, y, w, h)
         self.action = action
+
+    @abc.abstractmethod
+    def draw(self, screen):
+        pass
+
+    def set_action(self, action):
+        self.action = action
+
+
+
+
+class ToolBarButton(Button):
+    def __init__(self, text, x, y, tool, col=(250, 250, 250), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
+        super().__init__(text, x, y, col, hovered_col, w, h, action)
         self.tool = tool
 
     def draw(self, screen):
@@ -179,5 +218,79 @@ class Button:
         draw_text(screen, self.text, font, (0,0,0), self.rect)
 
 
-    def set_action(self, action):
-        self.action = action
+class Group:
+    def __init__(self, text, x, y, width, height):
+        self.text = text
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.radio_buttons = []
+        self.radio_buttons_actives = {}
+
+    def add_radiobutton(self, text, dx, dy, r):
+        f = ImageFont.truetype(MAIN_LEVEL_EDITOR_FONT, 14)
+        size = f.getsize(text)
+        self.radio_buttons.append(RadioButton(text, self.x + dx, self.y + dy, r, self, w = size[0] + r * 2 + 10))
+        self.radio_buttons_actives[text] = False
+
+    def set_active(self, text):
+        for btn in self.radio_buttons:
+            if btn.text == text:
+                self.radio_buttons_actives[text] = True
+            else:
+                self.radio_buttons_actives[btn.text] = False
+
+
+    def draw_group_label(self, screen):
+        rect = pygame.Rect(self.x,self.y,self.width,self.height)
+        self.draw_group_label_container(screen,  rect)
+
+        for btn in self.radio_buttons:
+            btn.draw(screen)  
+
+
+    def draw_group_label_container(self, screen, rect):
+        text_rect = draw_text2(screen, self.text, font, (0,0,0), rect.x + 20, rect.y - 9)
+        f = ImageFont.truetype(MAIN_LEVEL_EDITOR_FONT, 14)
+        size = f.getsize(self.text)
+        pygame.draw.line(screen, BORDER_COLOR, (rect.x, rect.y), (rect.x + 15, rect.y))
+        pygame.draw.line(screen, BORDER_COLOR, (rect.x + 20 + size[0] + 5, rect.y), (rect.x + rect.width, rect.y))
+
+        pygame.draw.line(screen, BORDER_COLOR, (rect.x + rect.width, rect.y), (rect.x + rect.width, rect.y + rect.height))
+        pygame.draw.line(screen, BORDER_COLOR, (rect.x + rect.width, rect.y + rect.height), (rect.x, rect.y + rect.height))
+        pygame.draw.line(screen, BORDER_COLOR, (rect.x, rect.y + rect.height), (rect.x, rect.y))
+
+
+
+
+class RadioButton(Button):
+    def __init__(self, text, x, y, r, group, col=(255, 255, 255), hovered_col=(173, 216, 230), w=130, h=20):
+        super().__init__( text, x, y, col, hovered_col, w, h)
+        self.r = r
+        self.group = group
+        self.circle = (self.rect.x + self.r, self.rect.y + self.r)
+        self.aux = pygame.Rect(self.rect.x, self.rect.y, self.r, self.r)
+
+
+    def draw(self, screen):
+        if self.active():
+            pygame.draw.circle(screen, (0,0,150), self.circle, self.r - 3)
+            pygame.draw.circle(screen, BORDER_COLOR, self.circle, self.r , 1)
+        else:
+            pos = pygame.mouse.get_pos()
+            if self.rect.collidepoint(pos):
+                pygame.draw.circle(screen, self.hovered_col, self.circle, self.r - 1)
+                pygame.draw.circle(screen, BORDER_COLOR, self.circle, self.r , 1)
+                mx = pygame.mouse.get_pressed()[0]
+                if mx:
+                    self.group.set_active(self.text)
+            else:
+                pygame.draw.circle(screen, WHITE, self.circle, self.r - 1)
+                pygame.draw.circle(screen, BORDER_COLOR, self.circle, self.r , 1)
+        draw_text2(screen, self.text, font, (0,0,0), self.rect.x + 20, self.rect.y)
+
+
+
+    def active(self):
+        return self.group.radio_buttons_actives[self.text] == True
