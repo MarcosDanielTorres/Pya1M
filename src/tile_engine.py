@@ -2,8 +2,8 @@ import pygame
 import csv
 from data.paths import *
 
-map_width = 30		# Amount of tiles in the x-axis.
-map_height = 13		# Amount of tiles in the y-axis.
+map_width = 100		# Amount of tiles in the x-axis.
+map_height = 70		# Amount of tiles in the y-axis.
 tile_width = 16		# Width of the tile.
 tile_height = 16	# Height of the tile.
 map_squares = []	# List of MapSquare objects.
@@ -37,9 +37,9 @@ def draw(display, scroll):
 		for y in range(map_height):
 			tile_index = map_squares[x][y].tile_index
 			if tile_index != 0:
-				display.blit(tile_indexes[tile_index], (x * 16 - scroll[0], y * 16 - scroll[1]))
+				display.blit(tile_indexes[tile_index], (x * tile_width - scroll[0], y * tile_height - scroll[1]))
 				if not map_squares[x][y].passable:
-					rect_list.append(pygame.Rect(x * 16, y * 16, 16, 16))
+					rect_list.append(pygame.Rect(x * tile_width, y * tile_height, tile_width, tile_height))
 	return rect_list
 
 
@@ -86,6 +86,7 @@ def save_map(path):
 
 def clear_map():
 	""" Clears the content of the map squares list """
+	global map_squares
 	map_squares = []
 
 

@@ -9,6 +9,7 @@ def path(directory: str, filename: str):
 
 def img_path(filename: str): return path("images", filename)
 def level_path(filename: str): return path("levels", filename)
+def font_path(filename: str): return path("fonts", filename)
 
 
 ROOT_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
@@ -21,10 +22,14 @@ GRASS_TILE = img_path("grass.png")
 LEVEL_1 = level_path("level_1.csv")
 LEVEL_1_SAVED = level_path("level_1_saved.csv")
 
+#fonts
+MAIN_LEVEL_EDITOR_FONT = font_path("LiberationSans-Regular.ttf")
+
 
 __all__ = [
 	"DIRT_TILE",
 	"GRASS_TILE",
 	"LEVEL_1",
-	"LEVEL_1_SAVED"
+	"LEVEL_1_SAVED",
+	"MAIN_LEVEL_EDITOR_FONT"
 ]
