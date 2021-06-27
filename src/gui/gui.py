@@ -156,7 +156,7 @@ class ToolBarDropDown:
 
 
 class Button:
-    def __init__(self, text, x, y, tool, col=(255, 255, 255), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
+    def __init__(self, text, x, y, tool, col=(250, 250, 250), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
         self.text = text
         self.col = col
         self.hovered_col = hovered_col
