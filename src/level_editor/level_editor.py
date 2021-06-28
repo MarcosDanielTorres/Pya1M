@@ -6,7 +6,7 @@ from PIL import ImageFont
 
 sys.path.append('..')
 
-from gui.gui import ToolBar, Group
+from gui.gui import ToolBar, Group, ListView
 import tile_engine
 from data.paths import *
 
@@ -97,13 +97,7 @@ def draw_grid():
 	for c in range(MAP_HEIGHT + 1):
 		pygame.draw.line(tile_map, LIGHTGREY, (0, c * TILE_SIZE - scroll[1]), (TILE_MAP_WIDTH, c * TILE_SIZE - scroll[1]))
 
-def draw_listview_container():
-	x = 15
-	y = TILE_MAP_POS_Y
-	width = 320 
-	height = 400
-	pygame.draw.rect(screen, WHITE, (x-1, y-1, width-1, height-1))
-	pygame.draw.rect(screen, BORDER_COLOR, (x, y, width, height), 1)
+
 
 
 def draw_text(screen, text, font, text_col, x,y, center=True):
@@ -148,6 +142,7 @@ tb_clear.set_action(clear_test)
 tb_about = ToolBar.get_button('About')
 tb_about.set_action(about_test)
 
+tileset_listview = ListView(15, TILE_MAP_POS_Y, 320, 400)
 
 group = Group("Tile Properties", 15, TILE_MAP_POS_Y + 420, 225, 100)
 group.add_radiobutton("Toggle Passable", 20, 20, 8)
@@ -166,17 +161,12 @@ while True:
 	screen.fill(SCREEN_COLOR)
 	tile_map.fill((255,255,255))
 
-	print("MAP WIDTH: ", MAP_WIDTH)
-	print("MAP HEIGHT: ", MAP_HEIGHT)
-	print("TILE SIZE: ", TILE_SIZE)
-	print("TILES PER SCREEN H: ", TILES_PER_SCREEN_HORIZONTALLY)
-	print("TILES PER SCREEN V: ", TILES_PER_SCREEN_VERTICALLY)
-	print("SCROLL[0] = ", scroll[0])
-	print("SCROLL[1] = ", scroll[1])
 
 	draw_grid()
+	tileset_listview.draw(screen)
 
-	draw_listview_container() # obj listview
+	tileset_listview.check()
+	current_tile = tileset_listview.clicked_tile_index
 
 	group.draw_group_label(screen)
 

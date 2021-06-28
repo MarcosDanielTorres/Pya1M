@@ -3,6 +3,7 @@ import abc
 sys.path.append('..')
 from data.paths import *
 from PIL import ImageFont
+from tile_engine import tile_indexes, tile_size
 
 
 BORDER_COLOR = (130, 135, 144)
@@ -197,7 +198,6 @@ class Button(metaclass=abc.ABCMeta):
 
 
 
-
 class ToolBarButton(Button):
     def __init__(self, text, x, y, tool, col=(250, 250, 250), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
         super().__init__(text, x, y, col, hovered_col, w, h, action)
@@ -294,3 +294,90 @@ class RadioButton(Button):
 
     def active(self):
         return self.group.radio_buttons_actives[self.text] == True
+
+
+
+class ListView:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rect = pygame.Rect(x, y, width, height)
+        self.tileset = []
+        self._init_tileset()
+        self.clicked_tile_index = 2
+
+
+    def _init_tileset(self):
+        dx = 16
+        dy = 16
+        increment = 35 
+        for tile in tile_indexes:
+            tile_img = tile_indexes[tile]
+            self.tileset.append(TileButton(self.x + dx, self.y + dy, tile_img, tile, self))
+            dx += increment
+            if dx + increment >= self.width:
+                dy += increment
+                dx = 0
+
+
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, WHITE, (self.rect.x-1, self.rect.y-1, self.rect.width-1, self.rect.height-1))
+        pygame.draw.rect(screen, BORDER_COLOR, self.rect, 1)
+        self._draw_tileset(screen)
+
+
+
+    def _draw_tileset(self, screen):
+        for tile_btn in self.tileset:
+            tile_btn.draw(screen)
+
+    def check(self):
+        index = self.clicked_tile_index
+        for tile_btn in self.tileset:
+            index = tile_btn.check()
+            if index != -1:
+                self.clicked_tile_index = index
+
+        if index != -1:
+            return index
+        else:
+            return self.clicked_tile_index
+
+
+            
+
+class TileButton:
+    def __init__(self, x, y, img, tile_index, listview, clicked_col=(255, 105, 108), hovered_col=(255, 140, 105)):
+        self.x = x
+        self.y = y
+        self.img = pygame.transform.scale(img, (32, 32))
+        self.w = self.img.get_width()
+        self.h = self.img.get_height()
+        self.clicked_col = clicked_col
+        self.hovered_col = hovered_col
+        self.rect = pygame.Rect(x, y, self.w, self.h)
+        self.clicked = False
+        self.tile_index = tile_index
+        self.listview = listview
+
+    def draw(self, screen):
+        screen.blit(self.img, (self.x, self.y, self.w, self.h))
+        pos = pygame.mouse.get_pos()
+        mx = pygame.mouse.get_pressed()[0]
+        if self.rect.collidepoint(pos):
+            pygame.draw.rect(screen, self.hovered_col, (self.x, self.y, self.w, self.h), 2)
+        if self.listview.clicked_tile_index == self.tile_index:
+            pygame.draw.rect(screen, self.clicked_col, self.rect, 3)
+
+
+    def check(self):
+        pos = pygame.mouse.get_pos()
+        mx = pygame.mouse.get_pressed()[0]
+        if self.rect.collidepoint(pos):
+            if mx:
+                return self.tile_index 
+        return -1
+

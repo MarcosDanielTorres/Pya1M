@@ -6,6 +6,7 @@ map_width = 100		# Amount of tiles in the x-axis.
 map_height = 70		# Amount of tiles in the y-axis.
 tile_width = 16		# Width of the tile.
 tile_height = 16	# Height of the tile.
+tile_size = (tile_width, tile_height)
 map_squares = []	# List of MapSquare objects.
 
 dirt_img = pygame.image.load(DIRT_TILE)
@@ -13,6 +14,10 @@ grass_img = pygame.image.load(GRASS_TILE)
 
 
 tile_indexes = {1: dirt_img, 2: grass_img}
+
+"""
+TODO a function that loads the tile_indexes dict
+"""
 
 
 def collision_test(rect, tiles):
