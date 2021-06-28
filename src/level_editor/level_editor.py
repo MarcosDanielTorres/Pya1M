@@ -61,16 +61,16 @@ tile_engine.load_map("xd.csv")
 tile_engine.save_map("xd-saved.csv")
 
 def process_events():
-	global level, scrolling_left, scrolling_right
+	global level, scrolling_left, scrolling_right, scrolling_up, scrolling_down
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			pygame.quit()
 			sys.exit()
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_UP: 
-				level += 1
-			if event.key == pygame.K_DOWN and level > 0:
-				level -= 1
+				scrolling_up = True 
+			if event.key == pygame.K_DOWN:
+				scrolling_down = True 
 			if event.key == pygame.K_LEFT: 
 				scrolling_left = True
 			if event.key == pygame.K_RIGHT:
@@ -80,6 +80,10 @@ def process_events():
 				scrolling_left = False
 			if event.key == pygame.K_RIGHT:
 				scrolling_right = False
+			if event.key == pygame.K_UP: 
+				scrolling_up = False 
+			if event.key == pygame.K_DOWN:
+				scrolling_down = False 
 
 
 
@@ -91,7 +95,7 @@ def draw_grid():
 		pygame.draw.line(tile_map, LIGHTGREY, (c * TILE_SIZE - scroll[0], 0), (c * TILE_SIZE - scroll[0], TILE_MAP_HEIGHT))
 	# horizontal lines
 	for c in range(MAP_HEIGHT + 1):
-		pygame.draw.line(tile_map, LIGHTGREY, (0, c * TILE_SIZE), (TILE_MAP_WIDTH, c * TILE_SIZE))
+		pygame.draw.line(tile_map, LIGHTGREY, (0, c * TILE_SIZE - scroll[1]), (TILE_MAP_WIDTH, c * TILE_SIZE - scroll[1]))
 
 def draw_listview_container():
 	x = 15
@@ -154,11 +158,21 @@ scroll = [0,0]
 scrolling_right = False
 scrolling_left = False
 scroll_right_limit = MAP_WIDTH * TILE_SIZE - TILES_PER_SCREEN_HORIZONTALLY * TILE_SIZE
+scrolling_up = False
+scrolling_down = False
+scroll_limit = MAP_HEIGHT * TILE_SIZE - TILES_PER_SCREEN_VERTICALLY * TILE_SIZE
 
 while True:
 	screen.fill(SCREEN_COLOR)
 	tile_map.fill((255,255,255))
 
+	print("MAP WIDTH: ", MAP_WIDTH)
+	print("MAP HEIGHT: ", MAP_HEIGHT)
+	print("TILE SIZE: ", TILE_SIZE)
+	print("TILES PER SCREEN H: ", TILES_PER_SCREEN_HORIZONTALLY)
+	print("TILES PER SCREEN V: ", TILES_PER_SCREEN_VERTICALLY)
+	print("SCROLL[0] = ", scroll[0])
+	print("SCROLL[1] = ", scroll[1])
 
 	draw_grid()
 
@@ -174,6 +188,13 @@ while True:
 		if scroll[0] > 0:
 			scroll[0] -= 5
 
+	if scrolling_down:
+		if scroll[1]  < scroll_limit:
+			scroll[1] += 5
+	if scrolling_up:
+		if scroll[1] > 0:
+			scroll[1] -= 5
+
 	tile_engine.draw(tile_map, scroll)
 
 
@@ -181,7 +202,7 @@ while True:
 
 	if TILE_MAP_POS_X < pos[0] < TILE_MAP_POS_X + TILE_MAP_WIDTH and TILE_MAP_POS_Y < pos[1] < TILE_MAP_POS_Y + TILE_MAP_HEIGHT:
 		x = (pos[0] - 430 + scroll[0]) // TILE_SIZE
-		y = (pos[1] - 50) // TILE_SIZE
+		y = (pos[1] - 50 + scroll[1]) // TILE_SIZE
 		if pygame.mouse.get_pressed()[0] == 1:
 			tile_engine.map_squares[x][y].tile_index = current_tile
 		elif pygame.mouse.get_pressed()[2] == 1:
