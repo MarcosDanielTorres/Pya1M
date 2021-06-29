@@ -227,6 +227,41 @@ while True:
 		scroll[1] = int(scroll[1])
 	"""
 
+
+
+	if ctrl:
+		if mousewheelup:
+			mousewheelup = False
+			zoom += zoom_increment
+			zoom_used = True
+			zoom_in = True
+			zoom_out = False 
+		elif mousewheeldown:
+			mousewheeldown = False
+			zoom -= zoom_increment
+			zoom_used = True
+			zoom_out = True
+			zoom_in = False
+			if zoom < 1:
+				zoom = 1
+			if scroll[0] > 800:
+				scroll[0] =  math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
+			if scroll[1] > 480:
+				scroll[1] = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
+		else:
+			zoom_used = False
+	else:
+		zoom_used = False
+
+		
+	if revert_zoom:
+		zoom = 1
+		if scroll[0] > 800:
+			scroll[0] = 800 #should not be hardcoded
+		if scroll[1] > 480:
+			scroll[1] = 480 #should not be hardcoded
+	
+
 	scroll_right_limit = math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
 	scroll_down_limit = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
 	
@@ -263,35 +298,7 @@ while True:
 			scroll[1] = 0
 
 
-	if ctrl:
-		if mousewheelup:
-			mousewheelup = False
-			zoom += zoom_increment
-			zoom_used = True
-			zoom_in = True
-			zoom_out = False 
-		elif mousewheeldown:
-			mousewheeldown = False
-			zoom -= zoom_increment
-			zoom_used = True
-			zoom_out = True
-			zoom_in = False
-			if zoom < 1:
-				zoom = 1
-		else:
-			zoom_used = False
-	else:
-		zoom_used = False
 
-
-
-		
-	if revert_zoom:
-		zoom = 1
-		if scroll[0] > 800:
-			scroll[0] = 800 #should not be hardcoded
-		if scroll[1] > 480:
-			scroll[1] = 480 #should not be hardcoded
 
 
 
