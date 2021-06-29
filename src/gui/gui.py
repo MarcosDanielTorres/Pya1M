@@ -302,7 +302,7 @@ class ListView:
         self.rect = pygame.Rect(x, y, width, height)
         self.tileset = []
         self._init_tileset()
-        self.clicked_tile_index = 2
+        self.clicked_tile_index = 1
 
 
     def _init_tileset(self):
@@ -376,4 +376,3 @@ class TileButton:
             if mx:
                 return self.tile_index 
         return -1
-

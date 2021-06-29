@@ -55,6 +55,7 @@ revert_zoom = False
 mousewheelup = False
 mousewheeldown = False
 ctrl = False
+zoom_used = False
 
 """ TODO Explicar esto, si no se va a cargar nada se inicialziada pero si se carga un mapa tiene que borarse el mapa
 	MAP_WIDTH Y HEIGHT de esta clase c orresponden a los mismos en tile e ngine, debería usar solo lo que está en tile engine
@@ -87,13 +88,13 @@ def process_events():
 				ctrl = True
 			if event.key == pygame.K_r:
 				revert_zoom = True
-			if event.key == pygame.K_UP: 
+			if event.key == pygame.K_w: 
 				scrolling_up = True 
-			if event.key == pygame.K_DOWN:
+			if event.key == pygame.K_s:
 				scrolling_down = True 
-			if event.key == pygame.K_LEFT: 
+			if event.key == pygame.K_a: 
 				scrolling_left = True
-			if event.key == pygame.K_RIGHT:
+			if event.key == pygame.K_d:
 				scrolling_right = True
 
 		if event.type == pygame.KEYUP:
@@ -101,13 +102,13 @@ def process_events():
 				ctrl = False 
 			if event.key == pygame.K_r:
 				revert_zoom = False
-			if event.key == pygame.K_LEFT:
+			if event.key == pygame.K_a:
 				scrolling_left = False
-			if event.key == pygame.K_RIGHT:
+			if event.key == pygame.K_d:
 				scrolling_right = False
-			if event.key == pygame.K_UP: 
+			if event.key == pygame.K_w: 
 				scrolling_up = False 
-			if event.key == pygame.K_DOWN:
+			if event.key == pygame.K_s:
 				scrolling_down = False 
 
 
@@ -175,6 +176,7 @@ group.add_radiobutton("Code", 20, 45, 8)
 
 
 scroll = [0,0]
+true_scroll = [0, 0]
 scrolling_right = False
 scrolling_left = False
 
@@ -187,11 +189,49 @@ scrolling_down = False
 while True:
 	screen.fill(SCREEN_COLOR)
 	tile_map.fill((255,255,255))
+	pos = pygame.mouse.get_pos()
+	
+	"""
+	if zoom_used:
+		x = int((pos[0] - TILE_MAP_POS_X + scroll[0] * zoom) // (TILE_SIZE * zoom))
+		y = int((pos[1] - TILE_MAP_POS_Y + scroll[1] * zoom) // (TILE_SIZE * zoom))
+		if zoom_in:
+			print(scroll[0])
+			scroll[0] = int(scroll[0] + (x + 16 * zoom))
+			scroll[1] = int( scroll[1] + (y + 16 * zoom))
+		
+
+			if scroll[0] < 0:
+				scroll[0] = 0
+			if scroll[0] > 800:
+				scroll[0] = 800 #should not be hardcoded
+			if scroll[1] < 0:
+				scroll[1] = 0
+			if scroll[1] > 480:
+				scroll[1] = 480 #should not be hardcoded
+			print(scroll)
+		elif zoom_out:
+			scroll[0] -= (16 * zoom) 
+			scroll[1] -=  (16 * zoom)
+			if scroll[0] < 0:
+				scroll[0] = 0
+			if scroll[0] > 800:
+				scroll[0] = 800 #should not be hardcoded
+			if scroll[1] < 0:
+				scroll[1] = 0
+			if scroll[1] > 480:
+				scroll[1] = 480 #should not be hardcoded
+			
+	else:
+		scroll[0] = int(scroll[0])
+		scroll[1] = int(scroll[1])
+	"""
 
 	scroll_right_limit = math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
 	scroll_down_limit = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
-
+	
 	draw_grid()
+
 	tileset_listview.draw(screen)
 
 	tileset_listview.check()
@@ -223,15 +263,26 @@ while True:
 			scroll[1] = 0
 
 
-	if ctrl and mousewheelup:
-		mousewheelup = False
-		zoom += zoom_increment
+	if ctrl:
+		if mousewheelup:
+			mousewheelup = False
+			zoom += zoom_increment
+			zoom_used = True
+			zoom_in = True
+			zoom_out = False 
+		elif mousewheeldown:
+			mousewheeldown = False
+			zoom -= zoom_increment
+			zoom_used = True
+			zoom_out = True
+			zoom_in = False
+			if zoom < 1:
+				zoom = 1
+		else:
+			zoom_used = False
+	else:
+		zoom_used = False
 
-	if ctrl and mousewheeldown:
-		mousewheeldown = False
-		zoom -= zoom_increment
-		if zoom < 1:
-			zoom = 1
 
 
 		
@@ -247,7 +298,7 @@ while True:
 	tile_engine.draw(tile_map, scroll, zoom)
 
 
-	pos = pygame.mouse.get_pos()
+	
 
 	# should be in tile_engine.py
 	if TILE_MAP_POS_X < pos[0] < TILE_MAP_POS_X + TILE_MAP_WIDTH and TILE_MAP_POS_Y < pos[1] < TILE_MAP_POS_Y + TILE_MAP_HEIGHT:
