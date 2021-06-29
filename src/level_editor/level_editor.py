@@ -224,7 +224,9 @@ while True:
 	if revert_zoom:
 		zoom = 1
 		if scroll[0] > 800:
-			scroll[0] = 800
+			scroll[0] = 800 #should not be hardcoded
+		if scroll[1] > 480:
+			scroll[1] = 480 #should not be hardcoded
 
 
 
@@ -235,8 +237,9 @@ while True:
 
 	# should be in tile_engine.py
 	if TILE_MAP_POS_X < pos[0] < TILE_MAP_POS_X + TILE_MAP_WIDTH and TILE_MAP_POS_Y < pos[1] < TILE_MAP_POS_Y + TILE_MAP_HEIGHT:
-		x = (pos[0] - 430 + scroll[0]) // TILE_SIZE
-		y = (pos[1] - 50 + scroll[1]) // TILE_SIZE
+		x = int((pos[0] - TILE_MAP_POS_X + scroll[0] * zoom) // (TILE_SIZE * zoom))
+		y = int((pos[1] - TILE_MAP_POS_Y + scroll[1] * zoom) // (TILE_SIZE * zoom))
+		print("MOUSE COORDS: ",x, y)
 		if pygame.mouse.get_pressed()[0] == 1:
 			tile_engine.map_squares[x][y].tile_index = current_tile
 		elif pygame.mouse.get_pressed()[2] == 1:
@@ -256,8 +259,8 @@ while True:
 
 	tb.draw()
 	process_events()
-
-
+	
+	
 	screen.blit(tile_map, (TILE_MAP_POS_X, TILE_MAP_POS_Y))
 	pygame.display.update()
 	clock.tick(60)
