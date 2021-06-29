@@ -3,6 +3,7 @@ import sys
 import csv
 import pickle
 from PIL import ImageFont
+import math
 
 sys.path.append('..')
 
@@ -48,6 +49,11 @@ MAP_HEIGHT = tile_engine.map_height
 
 
 current_tile = 1
+zoom = 1
+zoom_increment = .1
+zoom_in = False
+zoom_out = False
+revert_zoom = False
 
 """ TODO Explicar esto, si no se va a cargar nada se inicialziada pero si se carga un mapa tiene que borarse el mapa
 	MAP_WIDTH Y HEIGHT de esta clase c orresponden a los mismos en tile e ngine, debería usar solo lo que está en tile engine
@@ -61,12 +67,18 @@ tile_engine.load_map("xd.csv")
 tile_engine.save_map("xd-saved.csv")
 
 def process_events():
-	global level, scrolling_left, scrolling_right, scrolling_up, scrolling_down
+	global level, scrolling_left, scrolling_right, scrolling_up, scrolling_down, zoom_in, zoom_out, revert_zoom
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			pygame.quit()
 			sys.exit()
 		if event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_r:
+				revert_zoom = True
+			if event.key == pygame.K_PLUS:
+				zoom_in = True 
+			if event.key == pygame.K_SPACE:
+				zoom_out = True 
 			if event.key == pygame.K_UP: 
 				scrolling_up = True 
 			if event.key == pygame.K_DOWN:
@@ -76,6 +88,12 @@ def process_events():
 			if event.key == pygame.K_RIGHT:
 				scrolling_right = True
 		if event.type == pygame.KEYUP:
+			if event.key == pygame.K_r:
+				revert_zoom = False
+			if event.key == pygame.K_PLUS:
+				zoom_in = False 
+			if event.key == pygame.K_SPACE:
+				zoom_out = False 
 			if event.key == pygame.K_LEFT:
 				scrolling_left = False
 			if event.key == pygame.K_RIGHT:
@@ -92,10 +110,10 @@ def process_events():
 def draw_grid():
 	# vertical lines
 	for c in range(MAP_WIDTH + 1):
-		pygame.draw.line(tile_map, LIGHTGREY, (c * TILE_SIZE - scroll[0], 0), (c * TILE_SIZE - scroll[0], TILE_MAP_HEIGHT))
+		pygame.draw.line(tile_map, LIGHTGREY, (int((c * TILE_SIZE - scroll[0]) * zoom), 0), (int((c * TILE_SIZE - scroll[0]) * zoom), int(TILE_MAP_HEIGHT * zoom)))
 	# horizontal lines
 	for c in range(MAP_HEIGHT + 1):
-		pygame.draw.line(tile_map, LIGHTGREY, (0, c * TILE_SIZE - scroll[1]), (TILE_MAP_WIDTH, c * TILE_SIZE - scroll[1]))
+		pygame.draw.line(tile_map, LIGHTGREY, (0, int((c * TILE_SIZE - scroll[1]) * zoom)), (int(TILE_MAP_WIDTH * zoom), int((c * TILE_SIZE - scroll[1]) * zoom)))
 
 
 
@@ -108,7 +126,7 @@ def draw_text(screen, text, font, text_col, x,y, center=True):
 
 pygame.display.set_caption('Level Editor')
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-tile_map = pygame.Surface((TILE_MAP_WIDTH, TILE_MAP_HEIGHT)) #MAP HEIGHT SHOULD BE TILES PER SCREEN VERTICALLY
+tile_map = pygame.Surface((TILE_MAP_WIDTH, TILE_MAP_HEIGHT)) 
 
 TILE_MAP_POS_X = 430
 TILE_MAP_POS_Y = 50
@@ -152,15 +170,20 @@ group.add_radiobutton("Code", 20, 45, 8)
 scroll = [0,0]
 scrolling_right = False
 scrolling_left = False
-scroll_right_limit = MAP_WIDTH * TILE_SIZE - TILES_PER_SCREEN_HORIZONTALLY * TILE_SIZE
+
+
+
 scrolling_up = False
 scrolling_down = False
-scroll_limit = MAP_HEIGHT * TILE_SIZE - TILES_PER_SCREEN_VERTICALLY * TILE_SIZE
+
+# 38 tiles horizontally for a 1.30 zoom, meaning 50 // 1.3 or equivalent: Tiles_hori // zoom
 
 while True:
 	screen.fill(SCREEN_COLOR)
 	tile_map.fill((255,255,255))
 
+	scroll_right_limit = math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
+	scroll_down_limit = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
 
 	draw_grid()
 	tileset_listview.draw(screen)
@@ -174,22 +197,43 @@ while True:
 	if scrolling_right:
 		if scroll[0]  < scroll_right_limit:
 			scroll[0] += 5
+		else:
+			scroll[0] = scroll_right_limit
 	if scrolling_left:
 		if scroll[0] > 0:
 			scroll[0] -= 5
+		else:
+			scroll[0] = 0
 
 	if scrolling_down:
-		if scroll[1]  < scroll_limit:
+		if scroll[1]  < scroll_down_limit:
 			scroll[1] += 5
+		else:
+			scroll[1] = scroll_down_limit
 	if scrolling_up:
 		if scroll[1] > 0:
 			scroll[1] -= 5
+		else:
+			scroll[1] = 0
 
-	tile_engine.draw(tile_map, scroll)
+
+	if zoom_in:
+		zoom += zoom_increment
+	if zoom_out:
+		zoom -= zoom_increment
+	if revert_zoom:
+		zoom = 1
+		if scroll[0] > 800:
+			scroll[0] = 800
+
+
+
+	tile_engine.draw(tile_map, scroll, zoom)
 
 
 	pos = pygame.mouse.get_pos()
 
+	# should be in tile_engine.py
 	if TILE_MAP_POS_X < pos[0] < TILE_MAP_POS_X + TILE_MAP_WIDTH and TILE_MAP_POS_Y < pos[1] < TILE_MAP_POS_Y + TILE_MAP_HEIGHT:
 		x = (pos[0] - 430 + scroll[0]) // TILE_SIZE
 		y = (pos[1] - 50 + scroll[1]) // TILE_SIZE
@@ -199,7 +243,17 @@ while True:
 			tile_engine.map_squares[x][y].tile_index = 0
 
 
-	
+	print("MAP_WIDTH: ", MAP_WIDTH)	
+	print("MAP_HEIGHT: ", MAP_HEIGHT)	
+	print("TILES_PER_SCREEN_HORIZONTALLY: ", TILES_PER_SCREEN_HORIZONTALLY)
+	print("TILES_PER_SCREEN_VERTICALLY: ", TILES_PER_SCREEN_VERTICALLY)
+	print("SCROLL[0]: ", scroll[0])
+	print("SCROLL[1]: ", scroll[1])
+	print("ZOOM: ", zoom)
+	print("POS: ", pos)
+	print("scroll_right_limit: ", scroll_right_limit)
+
+
 	tb.draw()
 	process_events()
 
@@ -207,5 +261,3 @@ while True:
 	screen.blit(tile_map, (TILE_MAP_POS_X, TILE_MAP_POS_Y))
 	pygame.display.update()
 	clock.tick(60)
-
-

@@ -9,13 +9,9 @@ from tile_engine import tile_indexes, tile_size
 BORDER_COLOR = (130, 135, 144)
 WHITE = (255, 255, 255)
 """
-	TODO: Document
-	Added text to buttons. I will not treat the header_btn of the dropdown
-	as a Button object but rather as a pygame.Rect and some basic functionality
+	TODOS:
+    
 	
-	Remove colors.
-	Blend hover color with text.
-	Add real function calls. For this to happen ToolBar should probably somehow knows the state of the level editor at all times.
 """
 
 # define font

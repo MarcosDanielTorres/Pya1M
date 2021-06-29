@@ -2,12 +2,12 @@ import pygame
 import csv
 from data.paths import *
 
-map_width = 100		# Amount of tiles in the x-axis.
-map_height = 70		# Amount of tiles in the y-axis.
-tile_width = 16		# Width of the tile.
-tile_height = 16	# Height of the tile.
-tile_size = (tile_width, tile_height)
-map_squares = []	# List of MapSquare objects.
+map_width = 100								# Amount of tiles in the x-axis.
+map_height = 70								# Amount of tiles in the y-axis.
+tile_width = 16								# Width of a tile.
+tile_height = 16							# Height of a tile.
+tile_size = (tile_width, tile_height)		# Width and height of a tile in tuple form
+map_squares = []							# List of MapSquare objects.
 
 dirt_img = pygame.image.load(DIRT_TILE)
 grass_img = pygame.image.load(GRASS_TILE)
@@ -33,7 +33,7 @@ def collision_test(rect, tiles):
 	return hit_list
 
 
-def draw(display, scroll):
+def draw(display, scroll, zoom):
 	""" Draws the previously loaded tile map and creates a list of non-passable tiles
 	TODO: should deal with tiles that are passable but when interacted with, a collission occurs. i.e coins, enemies and such.
 	"""
@@ -42,7 +42,7 @@ def draw(display, scroll):
 		for y in range(map_height):
 			tile_index = map_squares[x][y].tile_index
 			if tile_index != 0:
-				display.blit(tile_indexes[tile_index], (x * tile_width - scroll[0], y * tile_height - scroll[1]))
+				display.blit(pygame.transform.scale(tile_indexes[tile_index], (int(zoom * tile_width), int(zoom * tile_height))), (int((x * tile_width - scroll[0]) * zoom), int((y * tile_height - scroll[1]) * zoom)))
 				if not map_squares[x][y].passable:
 					rect_list.append(pygame.Rect(x * tile_width, y * tile_height, tile_width, tile_height))
 	return rect_list
