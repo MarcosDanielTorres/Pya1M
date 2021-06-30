@@ -190,43 +190,6 @@ while True:
 	screen.fill(SCREEN_COLOR)
 	tile_map.fill((255,255,255))
 	pos = pygame.mouse.get_pos()
-	
-	"""
-	if zoom_used:
-		x = int((pos[0] - TILE_MAP_POS_X + scroll[0] * zoom) // (TILE_SIZE * zoom))
-		y = int((pos[1] - TILE_MAP_POS_Y + scroll[1] * zoom) // (TILE_SIZE * zoom))
-		if zoom_in:
-			print(scroll[0])
-			scroll[0] = int(scroll[0] + (x + 16 * zoom))
-			scroll[1] = int( scroll[1] + (y + 16 * zoom))
-		
-
-			if scroll[0] < 0:
-				scroll[0] = 0
-			if scroll[0] > 800:
-				scroll[0] = 800 #should not be hardcoded
-			if scroll[1] < 0:
-				scroll[1] = 0
-			if scroll[1] > 480:
-				scroll[1] = 480 #should not be hardcoded
-			print(scroll)
-		elif zoom_out:
-			scroll[0] -= (16 * zoom) 
-			scroll[1] -=  (16 * zoom)
-			if scroll[0] < 0:
-				scroll[0] = 0
-			if scroll[0] > 800:
-				scroll[0] = 800 #should not be hardcoded
-			if scroll[1] < 0:
-				scroll[1] = 0
-			if scroll[1] > 480:
-				scroll[1] = 480 #should not be hardcoded
-			
-	else:
-		scroll[0] = int(scroll[0])
-		scroll[1] = int(scroll[1])
-	"""
-
 
 
 	if ctrl:
@@ -260,7 +223,7 @@ while True:
 			scroll[0] = 800 #should not be hardcoded
 		if scroll[1] > 480:
 			scroll[1] = 480 #should not be hardcoded
-	
+
 
 	scroll_right_limit = math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
 	scroll_down_limit = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
