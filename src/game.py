@@ -5,6 +5,7 @@ import pygame
 import sys 
 from gui.gui import ToolBar
 
+holaaaaaaaaaaaaaaaa
 
 clock = pygame.time.Clock()  # set up the clock
 
