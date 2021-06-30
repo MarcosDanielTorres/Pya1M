@@ -376,3 +376,6 @@ class TileButton:
             if mx:
                 return self.tile_index 
         return -1
+
+class DialogBox:
+    pass
