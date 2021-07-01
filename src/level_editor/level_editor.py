@@ -48,7 +48,7 @@ MAP_HEIGHT = tile_engine.map_height
 
 current_tile = 1
 zoom = 1
-zoom_increment = .1
+zoom_increment = 1
 zoom_in = False
 zoom_out = False
 revert_zoom = False
@@ -116,7 +116,7 @@ def process_events():
 
 
 def draw_grid():
-	# vertical lines
+	# vertical line
 	for c in range(MAP_WIDTH + 1):
 		pygame.draw.line(tile_map, LIGHTGREY, (int((c * TILE_SIZE - scroll[0]) * zoom), 0), (int((c * TILE_SIZE - scroll[0]) * zoom), int(TILE_MAP_HEIGHT * zoom)))
 	# horizontal lines
@@ -190,6 +190,7 @@ while True:
 	screen.fill(SCREEN_COLOR)
 	tile_map.fill((255,255,255))
 	pos = pygame.mouse.get_pos()
+	print(scroll)
 
 
 	if ctrl:
@@ -208,13 +209,14 @@ while True:
 			if zoom < 1:
 				zoom = 1
 			if scroll[0] > 800:
-				scroll[0] =  math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
+				scroll[0] =  math.floor(MAP_WIDTH * TILE_SIZE - ((TILES_PER_SCREEN_HORIZONTALLY / zoom)) * TILE_SIZE)
 			if scroll[1] > 480:
-				scroll[1] = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
+				scroll[1] = math.floor(MAP_HEIGHT * TILE_SIZE - ((TILES_PER_SCREEN_VERTICALLY / zoom)) * TILE_SIZE)
 		else:
 			zoom_used = False
 	else:
 		zoom_used = False
+
 
 		
 	if revert_zoom:
@@ -225,12 +227,12 @@ while True:
 			scroll[1] = 480 #should not be hardcoded
 
 
-	scroll_right_limit = math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
-	scroll_down_limit = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
+	scroll_right_limit = math.floor(MAP_WIDTH * TILE_SIZE - ((TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE))
+	scroll_down_limit = math.floor(MAP_HEIGHT * TILE_SIZE - ((TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE))
 	
-	draw_grid()
 
 	tileset_listview.draw(screen)
+	draw_grid()
 
 	tileset_listview.check()
 	current_tile = tileset_listview.clicked_tile_index
