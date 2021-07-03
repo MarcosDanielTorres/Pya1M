@@ -20,13 +20,18 @@ font = pygame.font.Font(MAIN_LEVEL_EDITOR_FONT, 14)
 
 cache_fonts = {}
 
-# function for outputting text onto the screen
-def draw_text(screen, text, font, text_col, rect, center=True):
+def _get_cached_text(text, text_col):
     if cache_fonts.get(text) == None:
         img = font.render(text, True, text_col)
         cache_fonts[text] = img
     
     text = cache_fonts[text]
+    return text
+
+
+# function for outputting text onto the screen
+def draw_text(screen, text, font, text_col, rect, center=True):
+    text = _get_cached_text(text, text_col)
     if center:
         screen.blit(text, text.get_rect(center=rect.center))
     else:
@@ -343,7 +348,6 @@ class ListView:
             return self.clicked_tile_index
 
 
-            
 
 class TileButton:
     def __init__(self, x, y, img, tile_index, listview, clicked_col=(255, 105, 108), hovered_col=(255, 140, 105)):
@@ -377,5 +381,125 @@ class TileButton:
                 return self.tile_index 
         return -1
 
-class DialogBox:
-    pass
+
+
+class DialogBox(metaclass=abc.ABCMeta):
+    def __init__(self, title, description, x, y,w,h):
+        self.title = title
+        self.description = description
+        self.rect = pygame.Rect(x,y,w,h)
+        self.action = None
+        self.active = False
+        self.clicked = False
+
+    def set_action(self, action):
+        self.action = action
+
+    def draw(self, screen):
+        screen.blit(multiLineSurface(self.description, font, self.rect, (0,0,0), (209, 235, 247)), self.rect)
+
+    def update(self):
+        if self.clicked:
+            self.active = False
+
+    def handle_click(self):
+        pos = pygame.mouse.get_pos()
+        mx = pygame.mouse.get_pressed()[0]
+        if self.rect.collidepoint(pos) and mx:
+            self.clicked = True
+
+
+class InformationDialogBox(DialogBox):
+    def __init__(self, title, description, x, y, w, h, title_col=(255,255,255), description_col=(173, 216, 230)):
+        super().__init__(title, description, x, y, w, h)
+
+
+
+    def draw(self, screen):
+        super().draw(screen)
+
+    def upate(self):
+        super().update()
+
+    def handle_click(self):
+        super().handle_click()
+
+
+
+
+
+class TextRectException:
+    def __init__(self, message=None):
+            self.message = message
+
+    def __str__(self):
+        return self.message
+
+
+def multiLineSurface(string: str, font: pygame.font.Font, rect: pygame.rect.Rect, fontColour: tuple, BGColour: tuple, justification=0):
+    """Returns a surface containing the passed text string, reformatted
+    to fit within the given rect, word-wrapping as necessary. The text
+    will be anti-aliased.
+
+    Parameters
+    ----------
+    string - the text you wish to render. \n begins a new line.
+    font - a Font object
+    rect - a rect style giving the size of the surface requested.
+    fontColour - a three-byte tuple of the rgb value of the
+             text color. ex (0, 0, 0) = BLACK
+    BGColour - a three-byte tuple of the rgb value of the surface.
+    justification - 0 (default) left-justified
+                1 horizontally centered
+                2 right-justified
+
+    Returns
+    -------
+    Success - a surface object with the text rendered onto it.
+    Failure - raises a TextRectException if the text won't fit onto the surface.
+    """
+
+    finalLines = []
+    requestedLines = string.splitlines()
+    # Create a series of lines that will fit on the provided
+    # rectangle.
+    for requestedLine in requestedLines:
+        if font.size(requestedLine)[0] > rect.width:
+            words = requestedLine.split(' ')
+            # if any of our words are too long to fit, return.
+            for word in words:
+                if font.size(word)[0] >= rect.width:
+                    raise TextRectException("The word " + word + " is too long to fit in the rect passed.")
+            # Start a new line
+            accumulatedLine = ""
+            for word in words:
+                testLine = accumulatedLine + word + " "
+                # Build the line while the words fit.
+                if font.size(testLine)[0] < rect.width:
+                    accumulatedLine = testLine
+                else:
+                    finalLines.append(accumulatedLine)
+                    accumulatedLine = word + " "
+            finalLines.append(accumulatedLine)
+        else:
+            finalLines.append(requestedLine)
+
+    # Let's try to write the text out on the surface.
+    surface = pygame.Surface(rect.size)
+    surface.fill(BGColour)
+    accumulatedHeight = 0
+    for line in finalLines:
+        if accumulatedHeight + font.size(line)[1] >= rect.height:
+             raise TextRectException("Once word-wrapped, the text string was too tall to fit in the rect.")
+        if line != "":
+            tempSurface = font.render(line, 1, fontColour)
+        if justification == 0:
+            surface.blit(tempSurface, (0, accumulatedHeight))
+        elif justification == 1:
+            surface.blit(tempSurface, ((rect.width - tempSurface.get_width()) / 2, accumulatedHeight))
+        elif justification == 2:
+            surface.blit(tempSurface, (rect.width - tempSurface.get_width(), accumulatedHeight))
+        else:
+            raise TextRectException("Invalid justification argument: " + str(justification))
+        accumulatedHeight += font.size(line)[1]
+    return surface
