@@ -15,6 +15,7 @@ grass_img = pygame.image.load(GRASS_TILE)
 
 tile_indexes = {1: dirt_img, 2: grass_img}
 
+
 """
 TODO a function that loads the tile_indexes dict
 """
@@ -42,7 +43,8 @@ def draw(display, scroll, zoom):
 		for y in range(map_height):
 			tile_index = map_squares[x][y].tile_index
 			if tile_index != 0:
-				display.blit(pygame.transform.scale(tile_indexes[tile_index], (int(zoom * tile_width), int(zoom * tile_height))), (int((x * tile_width - scroll[0]) * zoom), int((y * tile_height - scroll[1]) * zoom)))
+				display.blit(pygame.transform.scale(tile_indexes[tile_index], (int(zoom * tile_width), int(zoom * tile_height))),
+				 (int((x * tile_width - scroll[0]) * zoom), int((y * tile_height - scroll[1]) * zoom)))
 				if not map_squares[x][y].passable:
 					rect_list.append(pygame.Rect(x * tile_width, y * tile_height, tile_width, tile_height))
 	return rect_list

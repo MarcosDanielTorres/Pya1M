@@ -182,17 +182,19 @@ class ToolBarDropDown:
 
 
 
-class Button(metaclass=abc.ABCMeta):
-    def __init__(self, text, x, y, col=(250,250,250), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
+class Button:
+    def __init__(self, text, x, y, col=(250,250,250), text_col=(0,0,0), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
         self.text = text
         self.col = col
+        self.text_col = text_col
         self.hovered_col = hovered_col
         self.rect = pygame.Rect(x, y, w, h)
         self.action = action
 
-    @abc.abstractmethod
+
     def draw(self, screen):
-        pass
+        draw_text(screen, self.text, font, self.text_col, self.rect)
+
 
     def set_action(self, action):
         self.action = action
@@ -200,8 +202,8 @@ class Button(metaclass=abc.ABCMeta):
 
 
 class ToolBarButton(Button):
-    def __init__(self, text, x, y, tool, col=(250, 250, 250), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
-        super().__init__(text, x, y, col, hovered_col, w, h, action)
+    def __init__(self, text, x, y, tool, col=(250, 250, 250), text_col=(0,0,0), hovered_col=(173, 216, 230), w=110, h=20, action=lambda: print("Hola soy boton")):
+        super().__init__(text, x, y, col, text_col, hovered_col, w, h, action)
         self.tool = tool
 
     def draw(self, screen):
@@ -360,6 +362,7 @@ class TileButton:
         self.hovered_col = hovered_col
         self.rect = pygame.Rect(x, y, self.w, self.h)
         self.clicked = False
+        self.hovered = False
         self.tile_index = tile_index
         self.listview = listview
 
@@ -383,20 +386,27 @@ class TileButton:
 
 
 
-class DialogBox(metaclass=abc.ABCMeta):
-    def __init__(self, title, description, x, y,w,h):
+class DialogBox:
+    def __init__(self, title, description, x, y, w, h):
         self.title = title
         self.description = description
-        self.rect = pygame.Rect(x,y,w,h)
-        self.action = None
+        self.dialog_box_rect = pygame.Rect(x, y, w, h)
+        self.spacing = 20
+        self.title_textbox = TextBox(title, font, (x, y, w, self.spacing), (0, 0, 0), (209, 235, 247))
+        self.description_textbox = TextBox(description, font, (x, y+self.spacing, w, h-self.spacing), (0, 0, 0), (173, 216, 230), 20)
         self.active = False
         self.clicked = False
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
 
-    def set_action(self, action):
-        self.action = action
 
     def draw(self, screen):
-        screen.blit(multiLineSurface(self.description, font, self.rect, (0,0,0), (209, 235, 247)), self.rect)
+        pygame.draw.rect(screen, (173, 216, 230), self.dialog_box_rect)
+        self.title_textbox.draw(screen)
+        self.description_textbox.draw(screen)
+        pygame.draw.line(screen, (240,240,240), (self.x, self.y+self.spacing), (self.x + self.w, self.y+self.spacing)) 
 
     def update(self):
         if self.clicked:
@@ -405,15 +415,13 @@ class DialogBox(metaclass=abc.ABCMeta):
     def handle_click(self):
         pos = pygame.mouse.get_pos()
         mx = pygame.mouse.get_pressed()[0]
-        if self.rect.collidepoint(pos) and mx:
+        if self.dialog_box_rect.collidepoint(pos) and mx:
             self.clicked = True
 
 
 class InformationDialogBox(DialogBox):
-    def __init__(self, title, description, x, y, w, h, title_col=(255,255,255), description_col=(173, 216, 230)):
+    def __init__(self, title, description, x, y, w, h, bg_col=(173, 216, 230)):
         super().__init__(title, description, x, y, w, h)
-
-
 
     def draw(self, screen):
         super().draw(screen)
@@ -425,81 +433,92 @@ class InformationDialogBox(DialogBox):
         super().handle_click()
 
 
+class TextBox:
+    def __init__(self, text, font, rect, text_col=(0, 0, 0), bg_col=(255, 255, 255), spacing=0):
+        self.text = text
+        self.font = font
+        self.rect = pygame.Rect(rect)
+        self.text_col = text_col
+        self.bg_col = bg_col
+        self.spacing = spacing
+
+    def draw(self, screen):
+        screen.blit(self._multiLineSurface(), (self.rect.x, self.rect.y + self.spacing, self.rect.w, self.rect.h))
 
 
+    class _TextRectException:
+        def __init__(self, message=None):
+                self.message = message
 
-class TextRectException:
-    def __init__(self, message=None):
-            self.message = message
-
-    def __str__(self):
-        return self.message
+        def __str__(self):
+            return self.message
 
 
-def multiLineSurface(string: str, font: pygame.font.Font, rect: pygame.rect.Rect, fontColour: tuple, BGColour: tuple, justification=0):
-    """Returns a surface containing the passed text string, reformatted
-    to fit within the given rect, word-wrapping as necessary. The text
-    will be anti-aliased.
+    def _multiLineSurface(self, justification=0):
+        """Returns a surface containing the passed text string, reformatted
+        to fit within the given rect, word-wrapping as necessary. The text
+        will be anti-aliased.
 
-    Parameters
-    ----------
-    string - the text you wish to render. \n begins a new line.
-    font - a Font object
-    rect - a rect style giving the size of the surface requested.
-    fontColour - a three-byte tuple of the rgb value of the
-             text color. ex (0, 0, 0) = BLACK
-    BGColour - a three-byte tuple of the rgb value of the surface.
-    justification - 0 (default) left-justified
-                1 horizontally centered
-                2 right-justified
+        Parameters
+        ----------
+        string - the text you wish to render. \n begins a new line.
+        font - a Font object
+        rect - a rect style giving the size of the surface requested.
+        fontColour - a three-byte tuple of the rgb value of the
+                 text color. ex (0, 0, 0) = BLACK
+        BGColour - a three-byte tuple of the rgb value of the surface.
+        justification - 0 (default) left-justified
+                    1 horizontally centered
+                    2 right-justified
 
-    Returns
-    -------
-    Success - a surface object with the text rendered onto it.
-    Failure - raises a TextRectException if the text won't fit onto the surface.
-    """
+        Returns
+        -------
+        Success - a surface object with the text rendered onto it.
+        Failure - raises a TextRectException if the text won't fit onto the surface.
+        """
 
-    finalLines = []
-    requestedLines = string.splitlines()
-    # Create a series of lines that will fit on the provided
-    # rectangle.
-    for requestedLine in requestedLines:
-        if font.size(requestedLine)[0] > rect.width:
-            words = requestedLine.split(' ')
-            # if any of our words are too long to fit, return.
-            for word in words:
-                if font.size(word)[0] >= rect.width:
-                    raise TextRectException("The word " + word + " is too long to fit in the rect passed.")
-            # Start a new line
-            accumulatedLine = ""
-            for word in words:
-                testLine = accumulatedLine + word + " "
-                # Build the line while the words fit.
-                if font.size(testLine)[0] < rect.width:
-                    accumulatedLine = testLine
-                else:
-                    finalLines.append(accumulatedLine)
-                    accumulatedLine = word + " "
-            finalLines.append(accumulatedLine)
-        else:
-            finalLines.append(requestedLine)
+        rect = self.rect
+        finalLines = []
+        requestedLines = self.text.splitlines()
+        # Create a series of lines that will fit on the provided
+        # rectangle.
+        for requestedLine in requestedLines:
+            if self.font.size(requestedLine)[0] > rect.width:
+                words = requestedLine.split(' ')
+                # if any of our words are too long to fit, return.
+                for word in words:
+                    if self.font.size(word)[0] >= rect.width:
+                        raise self._TextRectException("The word " + word + " is too long to fit in the rect passed.")
+                # Start a new line
+                accumulatedLine = ""
+                for word in words:
+                    testLine = accumulatedLine + word + " "
+                    # Build the line while the words fit.
+                    if self.font.size(testLine)[0] < rect.width:
+                        accumulatedLine = testLine
+                    else:
+                        finalLines.append(accumulatedLine)
+                        accumulatedLine = word + " "
+                finalLines.append(accumulatedLine)
+            else:
+                finalLines.append(requestedLine)
 
-    # Let's try to write the text out on the surface.
-    surface = pygame.Surface(rect.size)
-    surface.fill(BGColour)
-    accumulatedHeight = 0
-    for line in finalLines:
-        if accumulatedHeight + font.size(line)[1] >= rect.height:
-             raise TextRectException("Once word-wrapped, the text string was too tall to fit in the rect.")
-        if line != "":
-            tempSurface = font.render(line, 1, fontColour)
-        if justification == 0:
-            surface.blit(tempSurface, (0, accumulatedHeight))
-        elif justification == 1:
-            surface.blit(tempSurface, ((rect.width - tempSurface.get_width()) / 2, accumulatedHeight))
-        elif justification == 2:
-            surface.blit(tempSurface, (rect.width - tempSurface.get_width(), accumulatedHeight))
-        else:
-            raise TextRectException("Invalid justification argument: " + str(justification))
-        accumulatedHeight += font.size(line)[1]
-    return surface
+        # Let's try to write the text out on the surface.
+        surface = pygame.Surface(rect.size)
+        surface.fill(self.bg_col)
+        accumulatedHeight = 0
+        for line in finalLines:
+            if accumulatedHeight + self.font.size(line)[1] >= rect.height:
+                 raise self._TextRectException("Once word-wrapped, the text string was too tall to fit in the rect.")
+            if line != "":
+                tempSurface = self.font.render(line, 1, self.text_col)
+            if justification == 0:
+                surface.blit(tempSurface, (0, accumulatedHeight))
+            elif justification == 1:
+                surface.blit(tempSurface, ((rect.width - tempSurface.get_width()) / 2, accumulatedHeight))
+            elif justification == 2:
+                surface.blit(tempSurface, (rect.width - tempSurface.get_width(), accumulatedHeight))
+            else:
+                raise self._TextRectException("Invalid justification argument: " + str(justification))
+            accumulatedHeight += self.font.size(line)[1]
+        return surface
