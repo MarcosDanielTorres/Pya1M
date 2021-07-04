@@ -7,7 +7,7 @@ import math
 
 sys.path.append('..')
 
-from gui.gui import ToolBar, Group, ListView
+from gui.gui import ToolBar, Group, ListView, InformationDialogBox
 import tile_engine
 from data.paths import *
 
@@ -57,16 +57,8 @@ mousewheeldown = False
 ctrl = False
 zoom_used = False
 
-""" TODO Explicar esto, si no se va a cargar nada se inicialziada pero si se carga un mapa tiene que borarse el mapa
-	MAP_WIDTH Y HEIGHT de esta clase c orresponden a los mismos en tile e ngine, debería usar solo lo que está en tile engine
+
 tile_engine.initialize()
-tile_engine.clear_map()
-tile_engine.load_map("Hola23.csv")
-tile_engine.save_map("xd.csv")
-print(tile_engine.map_squares)
-"""
-tile_engine.load_map("xd.csv")
-tile_engine.save_map("xd-saved.csv")
 
 def process_events():
 	global level, scrolling_left, scrolling_right, scrolling_up, scrolling_down, zoom_in, zoom_out, revert_zoom
@@ -139,11 +131,15 @@ tile_map = pygame.Surface((TILE_MAP_WIDTH, TILE_MAP_HEIGHT))
 TILE_MAP_POS_X = 430
 TILE_MAP_POS_Y = 50
 
-def about_test():
-	print("My name is Marcos Daniel and I'm a developer from Argentina doing this project just for fun!")
 
 def clear_test():
 	tile_engine.initialize()
+
+def save_button():
+	tile_engine.save_map("xd-saved.csv")
+
+def load_button():
+	tile_engine.load_map("xd-saved.csv")
 
 
 tb = ToolBar(screen)
@@ -151,9 +147,9 @@ tb = ToolBar(screen)
 tb_new = ToolBar.get_button('New')
 tb_new.set_action(lambda: print("New"))
 tb_save = ToolBar.get_button('Save')
-tb_save.set_action(lambda: print("Save"))
+tb_save.set_action(save_button)
 tb_load = ToolBar.get_button('Load')
-tb_load.set_action(lambda: print("Load"))
+tb_load.set_action(load_button)
 
 tb_interactive = ToolBar.get_button('Interactive')
 tb_interactive.set_action(lambda: print("Interactive "))
@@ -165,6 +161,11 @@ tb_background.set_action(lambda: print("Background"))
 tb_clear = ToolBar.get_button('Clear')
 tb_clear.set_action(clear_test)
 
+def about_test():
+	dialog.active = True
+	dialog.clicked = False
+
+
 tb_about = ToolBar.get_button('About')
 tb_about.set_action(about_test)
 
@@ -173,6 +174,12 @@ tileset_listview = ListView(15, TILE_MAP_POS_Y, 320, 400)
 group = Group("Tile Properties", 15, TILE_MAP_POS_Y + 420, 225, 100)
 group.add_radiobutton("Toggle Passable", 20, 20, 8)
 group.add_radiobutton("Code", 20, 45, 8)
+
+
+dialog = InformationDialogBox("About Me", 
+	"My name is Marcos Daniel and I'm a developer from Argentina doing this project just for fun!",
+	 SCREEN_WIDTH / 2 - 350 / 2, SCREEN_HEIGHT / 2 - 150 / 2, 350, 150)
+
 
 
 scroll = [0,0]
@@ -262,13 +269,8 @@ while True:
 
 
 
-
-
-
 	tile_engine.draw(tile_map, scroll, zoom)
 
-
-	
 
 	# should be in tile_engine.py
 	if TILE_MAP_POS_X < pos[0] < TILE_MAP_POS_X + TILE_MAP_WIDTH and TILE_MAP_POS_Y < pos[1] < TILE_MAP_POS_Y + TILE_MAP_HEIGHT:
@@ -279,24 +281,20 @@ while True:
 		elif pygame.mouse.get_pressed()[2] == 1:
 			tile_engine.map_squares[x][y].tile_index = 0
 
-	"""
-	print("MAP_WIDTH: ", MAP_WIDTH)	
-	print("MAP_HEIGHT: ", MAP_HEIGHT)	
-	print("TILES_PER_SCREEN_HORIZONTALLY: ", TILES_PER_SCREEN_HORIZONTALLY)
-	print("TILES_PER_SCREEN_VERTICALLY: ", TILES_PER_SCREEN_VERTICALLY)
-	print("SCROLL[0]: ", scroll[0])
-	print("SCROLL[1]: ", scroll[1])
-	print("ZOOM: ", zoom)
-	print("POS: ", pos)
-	print("scroll_right_limit: ", scroll_right_limit)
-	"""
-
-
 
 	tb.draw()
+
 	process_events()
 
 
 	screen.blit(tile_map, (TILE_MAP_POS_X, TILE_MAP_POS_Y))
+
+	dialog.handle_click()
+	dialog.update()
+
+	if dialog.active:
+		dialog.draw(screen)
+
+
 	pygame.display.update()
 	clock.tick(60)
