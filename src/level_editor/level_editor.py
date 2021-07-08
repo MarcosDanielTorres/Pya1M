@@ -7,7 +7,7 @@ import math
 
 sys.path.append('..')
 
-from gui.gui import ToolBar, Group, ListView, InformationDialogBox
+from gui.gui import ToolBar, Group, ListView, InformationDialogBox, InputBox
 import tile_engine
 from data.paths import *
 
@@ -16,7 +16,7 @@ from data.paths import *
 pygame.init()
 clock = pygame.time.Clock()
 
-MAIN_FONT = pygame.font.Font(MAIN_LEVEL_EDITOR_FONT, 14)
+MAIN_FONT = pygame.font.Font(MAIN_LEVEL_EDITOR_FONT, 1)
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
@@ -60,11 +60,13 @@ zoom_used = False
 
 tile_engine.initialize()
 
-def process_events():
+def process_events(events):
 	global level, scrolling_left, scrolling_right, scrolling_up, scrolling_down, zoom_in, zoom_out, revert_zoom
-	global mousewheelup, mousewheeldown, ctrl
+	global mousewheelup, mousewheeldown, ctrl, input_box
 
-	for event in pygame.event.get():
+	for event in events:
+		input_box.handle_event(event)
+
 		if event.type == pygame.QUIT:
 			pygame.quit()
 			sys.exit()
@@ -130,6 +132,7 @@ tile_map = pygame.Surface((TILE_MAP_WIDTH, TILE_MAP_HEIGHT))
 
 TILE_MAP_POS_X = 430
 TILE_MAP_POS_Y = 50
+TILE_MAP_POS = (TILE_MAP_POS_X, TILE_MAP_POS_Y)
 
 
 def clear_test():
@@ -192,6 +195,7 @@ scrolling_left = False
 scrolling_up = False
 scrolling_down = False
 
+input_box = InputBox("", 110, 513, 10, 20)
 
 while True:
 	screen.fill(SCREEN_COLOR)
@@ -245,6 +249,7 @@ while True:
 	group.draw_group_label(screen)
 
 
+
 	if scrolling_right:
 		if scroll[0]  < scroll_right_limit:
 			scroll[0] += 5
@@ -269,22 +274,23 @@ while True:
 
 
 
+	tile_engine.update_collissions()
 	tile_engine.draw(tile_map, scroll, zoom)
-
-
-	# should be in tile_engine.py
 	if TILE_MAP_POS_X < pos[0] < TILE_MAP_POS_X + TILE_MAP_WIDTH and TILE_MAP_POS_Y < pos[1] < TILE_MAP_POS_Y + TILE_MAP_HEIGHT:
-		x = int((pos[0] - TILE_MAP_POS_X + scroll[0] * zoom) // (TILE_SIZE * zoom))
-		y = int((pos[1] - TILE_MAP_POS_Y + scroll[1] * zoom) // (TILE_SIZE * zoom))
-		if pygame.mouse.get_pressed()[0] == 1:
-			tile_engine.map_squares[x][y].tile_index = current_tile
-		elif pygame.mouse.get_pressed()[2] == 1:
-			tile_engine.map_squares[x][y].tile_index = 0
+		tile_engine.handle_events((pos[0] - TILE_MAP_POS_X, pos[1] - TILE_MAP_POS_Y), scroll, zoom, current_tile)
+
 
 
 	tb.draw()
 
-	process_events()
+	events = pygame.event.get()
+
+	process_events(events)
+
+	input_box.update()
+	input_box.draw(screen)
+
+
 
 
 	screen.blit(tile_map, (TILE_MAP_POS_X, TILE_MAP_POS_Y))

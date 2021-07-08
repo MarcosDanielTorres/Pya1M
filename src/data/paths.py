@@ -15,6 +15,7 @@ def font_path(filename: str): return path("fonts", filename)
 ROOT_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
 
 # images
+TRANSPARENT_TILE = img_path("transparent.png")
 DIRT_TILE = img_path("dirt.png")
 GRASS_TILE = img_path("grass.png")
 
@@ -27,6 +28,7 @@ MAIN_LEVEL_EDITOR_FONT = font_path("LiberationSans-Regular.ttf")
 
 
 __all__ = [
+	"TRANSPARENT_TILE",
 	"DIRT_TILE",
 	"GRASS_TILE",
 	"LEVEL_1",

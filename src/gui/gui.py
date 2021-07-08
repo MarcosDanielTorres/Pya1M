@@ -6,6 +6,7 @@ from PIL import ImageFont
 from tile_engine import tile_indexes, tile_size
 
 
+
 BORDER_COLOR = (130, 135, 144)
 WHITE = (255, 255, 255)
 """
@@ -251,6 +252,8 @@ class Group:
 
         for btn in self.radio_buttons:
             btn.draw(screen)  
+
+
 
 
     def draw_group_label_container(self, screen, rect):
@@ -522,3 +525,64 @@ class TextBox:
                 raise self._TextRectException("Invalid justification argument: " + str(justification))
             accumulatedHeight += self.font.size(line)[1]
         return surface
+
+
+class InputBox:
+    """
+
+
+    This is a modified version of the original solution:
+    Credits to https://stackoverflow.com/questions/46390231/how-can-i-create-a-text-input-box-with-pygame
+    """
+    def __init__(self, text, x, y, w, h, maximum_length=123, color_active=pygame.Color('dodgerblue2'),
+                    color_inactive=pygame.Color("lightskyblue3"), bg_col=(255,255,255)):
+        self.text = text
+        self.rect = pygame.Rect(x, y, w, h)
+        self.maximum_length = maximum_length
+        self.color_active = color_active
+        self.color_inactive = color_inactive
+        self.color = color_inactive
+        self.bg_col = bg_col
+        self.txt_surface = font.render(text, True, self.color)
+        self.active = False
+        self.reached_maximum_length = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input_box rect.
+            if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
+                self.active = not self.active
+            else:
+                self.active = False
+            # Change the current color of the input box.
+            self.color = self.color_active if self.active else self.color_inactive
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    if not self.reached_maximum_length:
+                        self.text += event.unicode
+                # Re-render the text.
+                self.txt_surface = font.render(self.text, True, self.color)
+
+    def update(self):
+        # Resize the box if the text is too long.
+        width = max(100, self.txt_surface.get_width()+10)
+        if width > self.maximum_length:
+            self.reached_maximum_length = True
+        else:
+            self.reached_maximum_length = False
+        self.rect.w = width
+
+    def draw(self, screen):
+        # Draw the background rect.
+        pygame.draw.rect(screen, self.bg_col, self.rect)
+        # Blit the text.
+        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        # Draw the outer rect.
+        pygame.draw.rect(screen, self.color, self.rect, 2)
