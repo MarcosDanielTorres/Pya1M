@@ -7,9 +7,19 @@ import math
 
 sys.path.append('..')
 
+from commands import PlaceTileCommand
 from gui.gui import ToolBar, Group, ListView, InformationDialogBox, InputBox
-import tile_engine
 from data.paths import *
+
+from tile_engine import TileEngine
+from camera import Camera
+
+
+
+Camera.world_rectangle = pygame.Rect(0, 0, 1600, 1120)
+Camera.viewport_width = 800
+Camera.viewport_height = 640
+
 
 # To run as a standalone program.
 
@@ -37,18 +47,18 @@ SCREEN_COLOR = (240, 240, 240)
 
 level = 0
 
-TILE_SIZE = tile_engine.tile_width
+TILE_SIZE = TileEngine.tile_width
 TILES_PER_SCREEN_HORIZONTALLY = TILE_MAP_WIDTH // TILE_SIZE
 TILES_PER_SCREEN_VERTICALLY = TILE_MAP_HEIGHT // TILE_SIZE
 
-MAP_WIDTH = tile_engine.map_width
-MAP_HEIGHT = tile_engine.map_height 
+MAP_WIDTH = TileEngine.map_width
+MAP_HEIGHT = TileEngine.map_height 
+
 
 
 
 current_tile = 1
-zoom = 1
-zoom_increment = .1
+zoom_increment = 1
 zoom_in = False
 zoom_out = False
 revert_zoom = False
@@ -56,13 +66,14 @@ mousewheelup = False
 mousewheeldown = False
 ctrl = False
 zoom_used = False
+undo_pressed = False
+redo_pressed = False
 
-
-tile_engine.initialize()
+TileEngine.initialize()
 
 def process_events(events):
 	global level, scrolling_left, scrolling_right, scrolling_up, scrolling_down, zoom_in, zoom_out, revert_zoom
-	global mousewheelup, mousewheeldown, ctrl, input_box
+	global mousewheelup, mousewheeldown, ctrl, input_box, undo_pressed, redo_pressed
 
 	for event in events:
 		input_box.handle_event(event)
@@ -90,6 +101,10 @@ def process_events(events):
 				scrolling_left = True
 			if event.key == pygame.K_d:
 				scrolling_right = True
+			if event.key == pygame.K_z:
+				undo_pressed = True 
+			if event.key == pygame.K_x:
+				redo_pressed = True
 
 		if event.type == pygame.KEYUP:
 			if event.key == pygame.K_LCTRL:
@@ -103,19 +118,29 @@ def process_events(events):
 			if event.key == pygame.K_w: 
 				scrolling_up = False 
 			if event.key == pygame.K_s:
-				scrolling_down = False 
+				scrolling_down = False
+			if event.key == pygame.K_z:
+				undo_pressed = False 
+			if event.key == pygame.K_x:
+				redo_pressed = False
 
 
-
+#todo: draw_grid() and TileEngine.draw() do pretty much the same thing.
 
 
 def draw_grid():
 	# vertical lines
-	for c in range(MAP_WIDTH + 1):
-		pygame.draw.line(tile_map, LIGHTGREY, (int((c * TILE_SIZE - scroll[0]) * zoom), 0), (int((c * TILE_SIZE - scroll[0]) * zoom), int(TILE_MAP_HEIGHT * zoom)))
+	viewport = Camera.viewport
+	rect = TileEngine.screen_to_rect()
+	for c in range(rect.x, rect.x + rect.width + 1):
+		if c == MAP_WIDTH: break
+		aux = int((c * TILE_SIZE - Camera.scroll[0]) * Camera.zoom)
+		pygame.draw.line(tile_map, LIGHTGREY, (aux, 0), (aux, int(TILE_MAP_HEIGHT * Camera.zoom)))
 	# horizontal lines
-	for c in range(MAP_HEIGHT + 1):
-		pygame.draw.line(tile_map, LIGHTGREY, (0, int((c * TILE_SIZE - scroll[1]) * zoom)), (int(TILE_MAP_WIDTH * zoom), int((c * TILE_SIZE - scroll[1]) * zoom)))
+	for c in range(rect.y, rect.y + rect.height + 1):
+		if c == MAP_HEIGHT: break
+		aux = int((c * TILE_SIZE - Camera.scroll[1]) * Camera.zoom)
+		pygame.draw.line(tile_map, LIGHTGREY, (0, aux) , (int(TILE_MAP_WIDTH * Camera.zoom), aux))
 
 
 
@@ -136,13 +161,13 @@ TILE_MAP_POS = (TILE_MAP_POS_X, TILE_MAP_POS_Y)
 
 
 def clear_test():
-	tile_engine.initialize()
+	TileEngine.initialize()
 
 def save_button():
-	tile_engine.save_map("xd-saved.csv")
+	TileEngine.save_map("xd-saved.csv")
 
 def load_button():
-	tile_engine.load_map("xd-saved.csv")
+	TileEngine.load_map("xd-saved.csv")
 
 
 tb = ToolBar(screen)
@@ -185,17 +210,18 @@ dialog = InformationDialogBox("About Me",
 
 
 
-scroll = [0,0]
-true_scroll = [0, 0]
 scrolling_right = False
 scrolling_left = False
-
-
 
 scrolling_up = False
 scrolling_down = False
 
+
+
 input_box = InputBox("", 110, 513, 10, 20)
+comm_list = [PlaceTileCommand(None,0)]
+counter = 1
+
 
 while True:
 	screen.fill(SCREEN_COLOR)
@@ -206,22 +232,18 @@ while True:
 	if ctrl:
 		if mousewheelup:
 			mousewheelup = False
-			zoom += zoom_increment
+			Camera.zoom += zoom_increment
 			zoom_used = True
 			zoom_in = True
 			zoom_out = False 
 		elif mousewheeldown:
 			mousewheeldown = False
-			zoom -= zoom_increment
+			Camera.zoom -= zoom_increment
 			zoom_used = True
 			zoom_out = True
 			zoom_in = False
-			if zoom < 1:
-				zoom = 1
-			if scroll[0] > 800:
-				scroll[0] =  math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
-			if scroll[1] > 480:
-				scroll[1] = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
+			if Camera.zoom < 1:
+				Camera.zoom = 1
 		else:
 			zoom_used = False
 	else:
@@ -229,15 +251,13 @@ while True:
 
 		
 	if revert_zoom:
-		zoom = 1
-		if scroll[0] > 800:
-			scroll[0] = 800 #should not be hardcoded
-		if scroll[1] > 480:
-			scroll[1] = 480 #should not be hardcoded
+		Camera.zoom = 1
+		if Camera.scroll[0] > 800:
+			Camera.scroll[0] = 800 #should not be hardcoded
+		if Camera.scroll[1] > 480:
+			Camera.scroll[1] = 480 #should not be hardcoded
 
 
-	scroll_right_limit = math.floor(MAP_WIDTH * TILE_SIZE - (TILES_PER_SCREEN_HORIZONTALLY / zoom) * TILE_SIZE)
-	scroll_down_limit = math.floor(MAP_HEIGHT * TILE_SIZE - (TILES_PER_SCREEN_VERTICALLY / zoom) * TILE_SIZE)
 	
 	draw_grid()
 
@@ -248,44 +268,59 @@ while True:
 
 	group.draw_group_label(screen)
 
-
-
+	scroll_aux = pygame.Vector2(0, 0)
 	if scrolling_right:
-		if scroll[0]  < scroll_right_limit:
-			scroll[0] += 5
-		else:
-			scroll[0] = scroll_right_limit
+		scroll_aux[0] += 5
 	if scrolling_left:
-		if scroll[0] > 0:
-			scroll[0] -= 5
-		else:
-			scroll[0] = 0
-
+		scroll_aux[0] -= 5
 	if scrolling_down:
-		if scroll[1]  < scroll_down_limit:
-			scroll[1] += 5
-		else:
-			scroll[1] = scroll_down_limit
+		scroll_aux[1] += 5
 	if scrolling_up:
-		if scroll[1] > 0:
-			scroll[1] -= 5
-		else:
-			scroll[1] = 0
+		scroll_aux[1] -= 5
+
+	Camera.move(scroll_aux)
 
 
-
-	tile_engine.update_collissions()
-	tile_engine.draw(tile_map, scroll, zoom)
-	if TILE_MAP_POS_X < pos[0] < TILE_MAP_POS_X + TILE_MAP_WIDTH and TILE_MAP_POS_Y < pos[1] < TILE_MAP_POS_Y + TILE_MAP_HEIGHT:
-		tile_engine.handle_events((pos[0] - TILE_MAP_POS_X, pos[1] - TILE_MAP_POS_Y), scroll, zoom, current_tile)
-
-
-
-	tb.draw()
+	TileEngine.update()
+	TileEngine.draw(tile_map)
 
 	events = pygame.event.get()
 
 	process_events(events)
+
+
+	if TILE_MAP_POS_X < pos[0] < TILE_MAP_POS_X + TILE_MAP_WIDTH and TILE_MAP_POS_Y < pos[1] < TILE_MAP_POS_Y + TILE_MAP_HEIGHT:
+		comm = TileEngine.handle_events((pos[0] - TILE_MAP_POS_X, pos[1] - TILE_MAP_POS_Y), current_tile)
+		if comm and comm_list[-1] != comm:
+			comm_list.append(comm)
+			comm.execute()
+			counter = len(comm_list) - 1
+
+
+	tb.draw()
+
+	#################################################################
+	#undo and redo
+
+
+	if undo_pressed:
+		if len(comm_list) > 1:
+			xd_val = comm_list[counter]
+			xd_val.undo()
+			if counter != 1:
+				counter -= 1
+
+	if redo_pressed:
+
+		if counter != len(comm_list) - 1:
+			counter += 1
+			xd_val = comm_list[counter]
+			xd_val.execute()
+
+
+	#################################################################
+
+
 
 	input_box.update()
 	input_box.draw(screen)
@@ -303,4 +338,4 @@ while True:
 
 
 	pygame.display.update()
-	clock.tick(60)
+	clock.tick(120)

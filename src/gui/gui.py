@@ -3,9 +3,10 @@ import abc
 sys.path.append('..')
 from data.paths import *
 from PIL import ImageFont
-from tile_engine import tile_indexes, tile_size
+from tile_engine import TileEngine
 
 
+tile_engine = TileEngine()
 
 BORDER_COLOR = (130, 135, 144)
 WHITE = (255, 255, 255)
@@ -319,8 +320,8 @@ class ListView:
         dx = 16
         dy = 16
         increment = 35 
-        for tile in tile_indexes:
-            tile_img = tile_indexes[tile]
+        for tile in tile_engine.tile_indexes:
+            tile_img = tile_engine.tile_indexes[tile]
             self.tileset.append(TileButton(self.x + dx, self.y + dy, tile_img, tile, self))
             dx += increment
             if dx + increment >= self.width:
@@ -583,6 +584,6 @@ class InputBox:
         # Draw the background rect.
         pygame.draw.rect(screen, self.bg_col, self.rect)
         # Blit the text.
-        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        screen.blit(self.txt_surface, (self.rect.x+3, self.rect.y))
         # Draw the outer rect.
         pygame.draw.rect(screen, self.color, self.rect, 2)
