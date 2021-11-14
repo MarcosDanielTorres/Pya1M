@@ -11,7 +11,7 @@ Currently there are only two packages implemented:
 Both were made from scratch using just pygame for the graphics library (including buttons, toolbar, hover effects, drawing tiles, etc).
 
 
-![Alt Text](https://im2.ezgif.com/tmp/ezgif-2-18fcffe5f8d3.gif)
+![Alt Text](level-editor-demo.gif)
 
 
 # Level Editor
