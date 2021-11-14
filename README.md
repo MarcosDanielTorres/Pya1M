@@ -38,11 +38,12 @@ Export map.
 While there are many GUI libraries I decided to create my own. It has many problems that I should review later on, for now it satisfies what I have in mind.
 
 Curent Features:
-- Buttons
+- Button
 - Toolbar
+- RadioButton
 - Dropdown
 - GroupBox
-- Labels
+- Label
 - Text Scalling
 - TextView
  
